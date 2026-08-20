@@ -26,13 +26,13 @@ app.get('/', (req, res) => {
     const sqlRoster = 'SELECT * FROM dodgers_roster ORDER BY CAST(jersey_number AS UNSIGNED) ASC';
 
     db.query(sqlGames, (err, gamesResults) => {
-        if (err) return res.status(500).send('DBエラー(試合)');
+        if (err) return res.status(500).send('DBエラー(試合): ' + err.message);
         db.query(sqlStats, (err, statsResults) => {
-            if (err) return res.status(500).send('DBエラー(成績)');
+            if (err) return res.status(500).send('DBエラー(成績): ' + err.message);
             db.query(sqlStandings, (err, standingsResults) => {
-                if (err) return res.status(500).send('DBエラー(チーム成績)');
+                if (err) return res.status(500).send('DBエラー(チーム成績): ' + err.message);
                 db.query(sqlRoster, (err, rosterResults) => {
-                    if (err) return res.status(500).send('DBエラー(メンバー)');
+                    if (err) return res.status(500).send('DBエラー(メンバー): ' + err.message);
 
                     // 4つのデータを全部EJSへ受け渡す！
                     res.render('index', {
