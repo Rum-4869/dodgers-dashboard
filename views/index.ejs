@@ -7,16 +7,90 @@
     <title>Dodgers Dashboard</title>
     <link rel="apple-touch-icon" href="/apple-touch-icon.jpg">
     <style>
+
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: var(--text-color);
+            --card-bg: white;
+            --primary-color: var(--primary-color);
+            --badge-bg: #eef5fc;
+            --label-color: var(--label-color);
+            --border-color: #ccc;
+            --modal-overlay: rgba(0, 0, 0, 0.6);
+            --calendar-border: #ddd;
+            --calendar-hover: #f9f9f9;
+        }
+
+        body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --primary-color: #3b82f6;
+            --badge-bg: #2a2a2a;
+            --label-color: #aaa;
+            --border-color: var(--text-color);
+            --modal-overlay: rgba(0, 0, 0, 0.8);
+            --calendar-border: #333;
+            --calendar-hover: #2a2a2a;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .dark-mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            opacity: 0.8;
+        }
+        
+        .header { position: relative; } /* needed for absolute toggle */
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        
+        .live-badge {
+            background-color: #ff3b30;
+            color: white;
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
+            background-color: var(--bg-color); transition: background-color 0.3s, color 0.3s;
+            color: var(--text-color);
             margin: 0;
             padding: 0;
         }
 
         .header {
-            background-color: #005A9C;
+            background-color: var(--primary-color);
             color: white;
             padding: 20px;
             text-align: center;
@@ -38,7 +112,7 @@
         }
 
         .standings-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 15px;
             padding: 15px 20px;
             margin-bottom: 20px;
@@ -54,14 +128,14 @@
 
         .standings-label {
             font-size: 0.75em;
-            color: #888;
+            color: var(--label-color);
             font-weight: bold;
         }
 
         .standings-value {
             font-size: 1.5em;
             font-weight: bold;
-            color: #005A9C;
+            color: var(--primary-color);
             margin-top: 2px;
         }
 
@@ -76,12 +150,12 @@
 
         /* 🌟 選手カードが「押せる」ように改造！ */
         .player-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 10px;
             text-align: center;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            border-top: 3px solid #005A9C;
+            border-top: 3px solid var(--primary-color);
             cursor: pointer;
             /* マウスを指マークにする */
             transition: transform 0.2s, box-shadow 0.2s;
@@ -89,7 +163,7 @@
 
         .player-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0, 90, 156, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .player-img {
@@ -97,16 +171,16 @@
             height: 70px;
             border-radius: 50%;
             object-fit: cover;
-            background: #eef5fc;
+            background: var(--badge-bg);
             margin: 0 auto 8px;
             display: block;
-            border: 2px solid #005A9C;
+            border: 2px solid var(--primary-color);
         }
 
         .player-number {
             font-size: 1.1em;
             font-weight: bold;
-            color: #005A9C;
+            color: var(--primary-color);
         }
 
         .player-name {
@@ -118,23 +192,23 @@
         .player-pos {
             font-size: 0.75em;
             color: #777;
-            background: #eef5fc;
+            background: var(--badge-bg);
             padding: 2px 6px;
             border-radius: 4px;
             display: inline-block;
         }
 
         .card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 15px;
             margin-bottom: 15px;
-            border-left: 6px solid #005A9C;
+            border-left: 6px solid var(--primary-color);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
         }
 
         .date {
-            color: #888;
+            color: var(--label-color);
             font-size: 0.8em;
             margin-bottom: 10px;
             text-align: center;
@@ -172,10 +246,10 @@
 
         h2 {
             font-size: 1.1em;
-            color: #444;
+            color: var(--text-color);
             margin-top: 25px;
             margin-bottom: 12px;
-            border-left: 4px solid #005A9C;
+            border-left: 4px solid var(--primary-color);
             padding-left: 8px;
         }
 
@@ -188,14 +262,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: var(--modal-overlay);
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
 
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             padding: 25px;
             border-radius: 15px;
             width: 85%;
@@ -211,7 +285,7 @@
             right: 15px;
             font-size: 1.5em;
             cursor: pointer;
-            color: #888;
+            color: var(--label-color);
         }
 
         .modal-stats {
@@ -235,14 +309,14 @@
 
         .modal-stat-label {
             font-size: 0.7em;
-            color: #666;
+            color: var(--label-color);
             font-weight: bold;
         }
 
         .modal-stat-value {
             font-size: 1.3em;
             font-weight: bold;
-            color: #005A9C;
+            color: var(--primary-color);
             margin-top: 5px;
         }
         /* 🌟 カレンダーのデザイン */
@@ -251,11 +325,11 @@
             grid-template-columns: repeat(7, 1fr);
             gap: 5px;
             margin-bottom: 20px;
-            background: white;
+            background: var(--card-bg);
             padding: 15px;
             border-radius: 12px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-            border-left: 6px solid #005A9C;
+            border-left: 6px solid var(--primary-color);
         }
         .calendar-header {
             text-align: center;
@@ -263,12 +337,12 @@
             font-size: 1.2em;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #444;
+            color: var(--text-color);
         }
         .day-name {
             text-align: center;
             font-weight: bold;
-            color: #888;
+            color: var(--label-color);
             font-size: 0.8em;
             margin-bottom: 5px;
         }
@@ -286,15 +360,15 @@
             cursor: default;
         }
         .day-cell.game-win {
-            background: #eef5fc;
+            background: var(--badge-bg);
             border: 1px solid #005A9C;
-            color: #005A9C;
+            color: var(--primary-color);
             cursor: pointer;
         }
         .day-cell.game-loss {
-            background: #f9f9f9;
+            background: var(--calendar-hover);
             border: 1px solid #ccc;
-            color: #666;
+            color: var(--label-color);
             cursor: pointer;
         }
         .day-cell.game-scheduled {
@@ -314,7 +388,7 @@
         .day-cell .tooltip {
             visibility: hidden;
             width: max-content;
-            background-color: #333;
+            background-color: var(--text-color);
             color: #fff;
             text-align: center;
             border-radius: 6px;
@@ -377,11 +451,22 @@
 
 <body>
 
+
     <div class="header">
+        <button id="darkModeBtn" class="dark-mode-toggle" onclick="toggleDarkMode()">☀️</button>
+
         <h1>⚾️ DODGERS DASHBOARD</h1>
     </div>
 
-    <div class="container">
+    <div class="container fade-in">
+        <!-- 🌟 HERO BANNER FOR NEXT/LIVE GAME -->
+        <div id="heroBanner" style="display: none; background: var(--card-bg); border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 25px; border-top: 4px solid var(--primary-color);">
+            <div id="heroStatus" style="font-weight: bold; color: var(--primary-color); margin-bottom: 10px; font-size: 1.2em;">Next Game</div>
+            <div id="heroMatchup" style="font-size: 1.5em; font-weight: bold; margin-bottom: 10px;">Dodgers vs Opponent</div>
+            <div id="heroPitchers" style="font-size: 0.9em; color: var(--label-color); margin-bottom: 15px;">A. Pitcher (A) vs H. Pitcher (H)</div>
+            <div id="heroCountdown" style="font-size: 2em; font-weight: bold; color: var(--text-color); font-variant-numeric: tabular-nums;">--:--:--</div>
+        </div>
+
         <% if (standings) { %>
             <div class="standings-card">
                 <div class="standings-item">
@@ -392,7 +477,7 @@
                 </div>
                 <div class="standings-item">
                     <div class="standings-label">敗戦数</div>
-                    <div class="standings-value" style="color: #666;">
+                    <div class="standings-value" style="color: var(--label-color);">
                         <%= standings.losses %>敗
                     </div>
                 </div>
@@ -412,7 +497,7 @@
             <% } %>
 
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px;">
-                        <h2 style="margin: 0; color: #005A9C;">⚾️ Roster</h2>
+                        <h2 style="margin: 0; color: var(--primary-color);">⚾️ Roster</h2>
                     </div>
                         <div class="roster-grid">
                             <% roster.forEach(player=> { %>
@@ -438,15 +523,100 @@
     <div id="playerModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h2 id="modalPlayerName" style="margin-top: 5px; color: #005A9C;">選手名</h2>
+            <h2 id="modalPlayerName" style="margin-top: 5px; color: var(--primary-color);">選手名</h2>
             <div id="modalPlayerStats" class="modal-stats">
             </div>
         </div>
     </div>
 
     <script>
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('darkModeBtn').innerText = isDark ? '🌙' : '☀️';
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        // ページ読み込み時にダークモード判定
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeBtn').innerText = '🌙';
+        }
+        
+
         // サーバーから渡された全試合データ
-        const gamesData = <%- JSON.stringify(games) %>;
+        const games = <%- JSON.stringify(games) %>;
+        
+        // --- NEXT GAME BANNER LOGIC ---
+        function initHeroBanner() {
+            const now = new Date();
+            let targetGame = null;
+            let isLive = false;
+
+            // 1. Check for Live Game
+            for (const g of games) {
+                if (g.status === 'Live' || g.status === 'In Progress') {
+                    targetGame = g;
+                    isLive = true;
+                    break;
+                }
+            }
+
+            // 2. If no Live game, find next upcoming game
+            if (!targetGame) {
+                for (const g of games) {
+                    const gameTime = new Date(g.game_datetime);
+                    if (gameTime > now) {
+                        targetGame = g;
+                        break;
+                    }
+                }
+            }
+
+            if (targetGame) {
+                const banner = document.getElementById('heroBanner');
+                const statusEl = document.getElementById('heroStatus');
+                const matchupEl = document.getElementById('heroMatchup');
+                const pitchersEl = document.getElementById('heroPitchers');
+                const countdownEl = document.getElementById('heroCountdown');
+                
+                banner.style.display = 'block';
+                matchupEl.innerText = `${targetGame.away_team} vs ${targetGame.home_team}`;
+                pitchersEl.innerText = `${targetGame.away_pitcher || '未定'} (A) - ${targetGame.home_pitcher || '未定'} (H)`;
+
+                if (isLive) {
+                    statusEl.innerHTML = '<span class="live-badge" style="font-size:0.9em;">LIVE 🔴</span> 試合中！';
+                    countdownEl.innerText = 'Now Playing';
+                } else {
+                    statusEl.innerText = 'Next Game';
+                    const targetTime = new Date(targetGame.game_datetime).getTime();
+                    
+                    // Countdown loop
+                    setInterval(() => {
+                        const currentTime = new Date().getTime();
+                        const distance = targetTime - currentTime;
+                        
+                        if (distance < 0) {
+                            countdownEl.innerText = 'Starting Soon...';
+                            return;
+                        }
+                        
+                        const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((distance % (1000 * 60)) / 1000);
+                        
+                        let timeStr = "";
+                        if (d > 0) timeStr += `${d}日 `;
+                        timeStr += `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                        countdownEl.innerText = timeStr;
+                    }, 1000);
+                }
+            }
+        }
+        
+        initHeroBanner();
 
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth(); // 0-indexed
@@ -492,7 +662,7 @@
             
             // 試合データを日付(YYYY-MM-DD)をキーにした辞書にする
             const gamesByDate = {};
-            gamesData.forEach(game => {
+            games.forEach(game => {
                 let dStr;
                 if (game.game_datetime) {
                     const d = new Date(game.game_datetime); // 自動的にローカル(日本)時間に変換される
@@ -520,17 +690,29 @@
                     const dodgerScore = isHome ? game.home_score : game.away_score;
                     const oppScore = isHome ? game.away_score : game.home_score;
                     const oppTeam = isHome ? game.away_team : game.home_team;
+                    const status = game.status;
                     
-                    if (game.status === 'Final') {
+                    if (status === 'Live' || status === 'In Progress') {
+                        html += `
+                            <div class="day-cell game-win" style="border: 2px solid #ff3b30;" onclick="toggleDayTooltip(event, this)">
+                                <div>${day}</div>
+                                <div class="live-badge">LIVE</div>
+                                <div class="tooltip">
+                                    <span class="live-badge">LIVE</span><br>
+                                    vs ${oppTeam.replace(' ', '<br>')}<br>
+                                    <strong style="font-size:1.1em;">${dodgerScore} - ${oppScore}</strong>
+                                    <hr style="border:0; border-top:1px solid var(--border-color); margin:5px 0;">
+                                    <div style="font-size:0.85em; text-align:left; color:var(--label-color);">
+                                        Away: ${game.away_pitcher || '未定'}<br>
+                                        Home: ${game.home_pitcher || '未定'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (game.status === 'Final') {
                         const isWin = dodgerScore > oppScore;
                         const resultClass = isWin ? 'game-win' : 'game-loss';
                         
-                        const awayPitcher = game.away_pitcher || '未定';
-                        const homePitcher = game.home_pitcher || '未定';
-                        const pitcherText = dodgerScore > oppScore ? 
-                            `<span style="color:#a8d5ff;">${homePitcher} (H)</span><br><span style="color:#ffb3b3;">${awayPitcher} (A)</span>` : 
-                            `<span style="color:#a8d5ff;">${awayPitcher} (A)</span><br><span style="color:#ffb3b3;">${homePitcher} (H)</span>`; // just keeping it simple for now
-
                         html += `
                             <div class="day-cell ${resultClass}" onclick="toggleDayTooltip(event, this)">
                                 <div>${day}</div>
@@ -538,8 +720,8 @@
                                 <div class="tooltip">
                                     vs ${oppTeam.replace(' ', '<br>')}<br>
                                     <strong style="font-size:1.1em;">${isWin ? '勝' : '負'} ${dodgerScore} - ${oppScore}</strong>
-                                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
-                                    <div style="font-size:0.85em; text-align:left; color:#ccc;">
+                                    <hr style="border:0; border-top:1px solid var(--border-color); margin:5px 0;">
+                                    <div style="font-size:0.85em; text-align:left; color:var(--label-color);">
                                         先発:<br>
                                         Away: ${game.away_pitcher || '未定'}<br>
                                         Home: ${game.home_pitcher || '未定'}
@@ -563,8 +745,8 @@
                                 <div class="tooltip">
                                     vs ${oppTeam.replace(' ', '<br>')}<br>
                                     <strong style="font-size:1.1em;">${timeStr} 開始</strong>
-                                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
-                                    <div style="font-size:0.85em; text-align:left; color:#ccc;">
+                                    <hr style="border:0; border-top:1px solid var(--border-color); margin:5px 0;">
+                                    <div style="font-size:0.85em; text-align:left; color:var(--label-color);">
                                         予告先発:<br>
                                         Away: ${game.away_pitcher || '未定'}<br>
                                         Home: ${game.home_pitcher || '未定'}
@@ -614,7 +796,7 @@
 
             document.getElementById('modalPlayerName').innerText = playerName;
             const statsEl = document.getElementById('modalPlayerStats');
-            statsEl.innerHTML = '<p style="color: #666; padding: 20px;">⚾️ 成績データを取得中...</p>';
+            statsEl.innerHTML = '<p style="color: var(--label-color); padding: 20px;">⚾️ 成績データを取得中...</p>';
 
             modal.style.display = 'flex';
 
@@ -646,7 +828,7 @@
                 let html = '';
                 if (hittingStats) {
                     html += `
-                    <div style="text-align: left; font-size: 0.85em; color: #555; margin-bottom: 5px; font-weight: bold; border-left: 3px solid #005A9C; padding-left: 5px;">⚾️ 打者成績</div>
+                    <div style="text-align: left; font-size: 0.85em; color: var(--label-color); margin-bottom: 5px; font-weight: bold; border-left: 3px solid var(--primary-color); padding-left: 5px;">⚾️ 打者成績</div>
                     <div class="modal-stat-row">
                         <div class="modal-stat-box"><div class="modal-stat-label">打率(AVG)</div><div class="modal-stat-value">${hittingStats.avg || '-'}</div></div>
                         <div class="modal-stat-box"><div class="modal-stat-label">本塁打(HR)</div><div class="modal-stat-value">${hittingStats.homeRuns || 0}</div></div>
@@ -655,7 +837,7 @@
                 }
                 if (pitchingStats) {
                     html += `
-                    <div style="text-align: left; font-size: 0.85em; color: #555; margin-bottom: 5px; font-weight: bold; border-left: 3px solid #005A9C; padding-left: 5px; ${hittingStats ? 'margin-top:15px;' : ''}">⚾️ 投手成績</div>
+                    <div style="text-align: left; font-size: 0.85em; color: var(--label-color); margin-bottom: 5px; font-weight: bold; border-left: 3px solid var(--primary-color); padding-left: 5px; ${hittingStats ? 'margin-top:15px;' : ''}">⚾️ 投手成績</div>
                     <div class="modal-stat-row">
                         <div class="modal-stat-box"><div class="modal-stat-label">防御率(ERA)</div><div class="modal-stat-value">${pitchingStats.era || '-'}</div></div>
                         <div class="modal-stat-box"><div class="modal-stat-label">勝利(W)</div><div class="modal-stat-value">${pitchingStats.wins || 0}</div></div>
