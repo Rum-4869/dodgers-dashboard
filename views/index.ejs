@@ -526,6 +526,12 @@
                         const isWin = dodgerScore > oppScore;
                         const resultClass = isWin ? 'game-win' : 'game-loss';
                         
+                        const awayPitcher = game.away_pitcher || '未定';
+                        const homePitcher = game.home_pitcher || '未定';
+                        const pitcherText = dodgerScore > oppScore ? 
+                            `<span style="color:#a8d5ff;">${homePitcher} (H)</span><br><span style="color:#ffb3b3;">${awayPitcher} (A)</span>` : 
+                            `<span style="color:#a8d5ff;">${awayPitcher} (A)</span><br><span style="color:#ffb3b3;">${homePitcher} (H)</span>`; // just keeping it simple for now
+
                         html += `
                             <div class="day-cell ${resultClass}" onclick="toggleDayTooltip(event, this)">
                                 <div>${day}</div>
@@ -533,6 +539,12 @@
                                 <div class="tooltip">
                                     vs ${oppTeam.replace(' ', '<br>')}<br>
                                     <strong style="font-size:1.1em;">${isWin ? '勝' : '負'} ${dodgerScore} - ${oppScore}</strong>
+                                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
+                                    <div style="font-size:0.85em; text-align:left; color:#ccc;">
+                                        先発:<br>
+                                        Away: ${game.away_pitcher || '未定'}<br>
+                                        Home: ${game.home_pitcher || '未定'}
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -552,6 +564,12 @@
                                 <div class="tooltip">
                                     vs ${oppTeam.replace(' ', '<br>')}<br>
                                     <strong style="font-size:1.1em;">${timeStr} 開始</strong>
+                                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
+                                    <div style="font-size:0.85em; text-align:left; color:#ccc;">
+                                        予告先発:<br>
+                                        Away: ${game.away_pitcher || '未定'}<br>
+                                        Home: ${game.home_pitcher || '未定'}
+                                    </div>
                                 </div>
                             </div>
                         `;

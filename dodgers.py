@@ -9,7 +9,7 @@ print("⚾️ MLB APIからドジャースの全データを取得中...\n")
 
 import datetime
 current_year = datetime.datetime.now().year
-games_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=119&season={current_year}"
+games_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=119&season={current_year}&hydrate=probablePitcher"
 games_data = requests.get(games_url).json()
 
 ohtani_url = "https://statsapi.mlb.com/api/v1/people/660271?hydrate=stats(group=[hitting],type=[season])"
@@ -46,7 +46,7 @@ try:
     cursor = connection.cursor()
 
     cursor.execute("DROP TABLE IF EXISTS dodgers_games")
-    cursor.execute("CREATE TABLE dodgers_games (id INT AUTO_INCREMENT PRIMARY KEY, game_date DATE, game_datetime VARCHAR(30), away_team VARCHAR(50), away_score INT, home_team VARCHAR(50), home_score INT, status VARCHAR(20))")
+    cursor.execute("CREATE TABLE dodgers_games (id INT AUTO_INCREMENT PRIMARY KEY, game_date DATE, game_datetime VARCHAR(30), away_team VARCHAR(50), away_score INT, home_team VARCHAR(50), home_score INT, status VARCHAR(20), away_pitcher VARCHAR(100), home_pitcher VARCHAR(100))")
     cursor.execute("CREATE TABLE IF NOT EXISTS player_stats (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50), avg VARCHAR(10), hr INT, rbi INT, ops VARCHAR(10), sb INT)")
     cursor.execute("CREATE TABLE IF NOT EXISTS team_standings (id INT AUTO_INCREMENT PRIMARY KEY, wins INT, losses INT, pct VARCHAR(10), division_rank VARCHAR(10))")
     
@@ -81,7 +81,11 @@ try:
             away_score = game["teams"]["away"].get("score", 0)
             home_team = game["teams"]["home"]["team"]["name"]
             home_score = game["teams"]["home"].get("score", 0)
-            cursor.execute("INSERT INTO dodgers_games (game_date, game_datetime, away_team, away_score, home_team, home_score, status) VALUES (%s, %s, %s, %s, %s, %s, %s)", (date, game_datetime, away_team, away_score, home_team, home_score, status))
+            
+            away_pitcher = game["teams"]["away"].get("probablePitcher", {}).get("fullName", "")
+            home_pitcher = game["teams"]["home"].get("probablePitcher", {}).get("fullName", "")
+            
+            cursor.execute("INSERT INTO dodgers_games (game_date, game_datetime, away_team, away_score, home_team, home_score, status, away_pitcher, home_pitcher) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (date, game_datetime, away_team, away_score, home_team, home_score, status, away_pitcher, home_pitcher))
 
     connection.commit()
     connection.close()
