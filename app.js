@@ -1,9 +1,32 @@
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
+const Parser = require('rss-parser');
+const parser = new Parser();
+
 const updateDodgersData = require('./dataUpdater');
 
 const app = express();
+let cachedNews = [];
+
+// 定期的にニュースを取得
+async function fetchNews() {
+    try {
+        const feed = await parser.parseURL('https://www.mlb.com/dodgers/feeds/news/rss.xml');
+        // 最新の5件をキャッシュ
+        cachedNews = feed.items.slice(0, 5).map(item => ({
+            title: item.title,
+            link: item.link,
+            pubDate: item.pubDate,
+            contentSnippet: item.contentSnippet
+        }));
+        console.log(`📰 ニュースを更新しました: ${cachedNews.length}件`);
+    } catch (error) {
+        console.error('⚠️ ニュース取得エラー:', error);
+    }
+}
+fetchNews(); // 初回実行
+setInterval(fetchNews, 60 * 60 * 1000); // 1時間ごとに更新
 const port = 3000;
 
 app.set('view engine', 'ejs');
@@ -21,32 +44,28 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
-app.get('/', (req, res) => {
-    const sqlGames = 'SELECT * FROM dodgers_games ORDER BY game_date DESC';
+app.get('/', async (req, res) => {
+    const sqlGames = 'SELECT * FROM dodgers_games ORDER BY game_date ASC';
     const sqlStats = 'SELECT * FROM player_stats LIMIT 1';
     const sqlStandings = 'SELECT * FROM team_standings LIMIT 1';
     const sqlRoster = 'SELECT * FROM dodgers_roster ORDER BY CAST(jersey_number AS UNSIGNED) ASC';
 
-    db.query(sqlGames, (err, gamesResults) => {
-        if (err) return res.status(500).send('DBエラー(試合): ' + err.message);
-        db.query(sqlStats, (err, statsResults) => {
-            if (err) return res.status(500).send('DBエラー(成績): ' + err.message);
-            db.query(sqlStandings, (err, standingsResults) => {
-                if (err) return res.status(500).send('DBエラー(チーム成績): ' + err.message);
-                db.query(sqlRoster, (err, rosterResults) => {
-                    if (err) return res.status(500).send('DBエラー(メンバー): ' + err.message);
+    try {
+        const [gamesResults] = await db.execute(sqlGames);
+        const [statsResults] = await db.execute(sqlStats);
+        const [standingsResults] = await db.execute(sqlStandings);
+        const [rosterResults] = await db.execute(sqlRoster);
 
-                    // 4つのデータを全部EJSへ受け渡す！
-                    res.render('index', {
-                        games: gamesResults,
-                        ohtani: statsResults[0],
-                        standings: standingsResults[0],
-                        roster: rosterResults
-                    });
-                });
-            });
+        res.render('index', {
+            games: gamesResults,
+            stats: statsResults[0],
+            standings: standingsResults[0],
+            roster: rosterResults,
+            news: cachedNews
         });
-    });
+    } catch (err) {
+        res.status(500).send('DB Error: ' + err.message);
+    }
 });
 
 app.listen(port, () => {

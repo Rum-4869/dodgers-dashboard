@@ -56,7 +56,7 @@ async function updateDodgersData() {
         console.log("DB connected for update.");
         
         await connection.execute("DROP TABLE IF EXISTS dodgers_games");
-        await connection.execute("CREATE TABLE dodgers_games (id INT AUTO_INCREMENT PRIMARY KEY, game_date DATE, game_datetime VARCHAR(30), away_team VARCHAR(50), away_score INT, home_team VARCHAR(50), home_score INT, status VARCHAR(20), away_pitcher VARCHAR(100), home_pitcher VARCHAR(100))");
+        await connection.execute("CREATE TABLE dodgers_games (id INT AUTO_INCREMENT PRIMARY KEY, game_pk INT, game_date DATE, game_datetime VARCHAR(30), away_team VARCHAR(50), away_score INT, home_team VARCHAR(50), home_score INT, status VARCHAR(20), away_pitcher VARCHAR(100), home_pitcher VARCHAR(100))");
         
         await connection.execute("CREATE TABLE IF NOT EXISTS player_stats (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50), avg VARCHAR(10), hr INT, rbi INT, ops VARCHAR(10), sb INT)");
         await connection.execute("CREATE TABLE IF NOT EXISTS team_standings (id INT AUTO_INCREMENT PRIMARY KEY, wins INT, losses INT, pct VARCHAR(10), division_rank VARCHAR(10))");
@@ -98,12 +98,13 @@ async function updateDodgersData() {
                 const homeTeam = game.teams.home.team.name;
                 const homeScore = game.teams.home.score || 0;
                 
+                const gamePk = game.gamePk;
                 const awayPitcher = game.teams.away.probablePitcher?.fullName || "";
                 const homePitcher = game.teams.home.probablePitcher?.fullName || "";
                 
                 await connection.execute(
-                    "INSERT INTO dodgers_games (game_date, game_datetime, away_team, away_score, home_team, home_score, status, away_pitcher, home_pitcher) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    [date, gameDatetime, awayTeam, awayScore, homeTeam, homeScore, status, awayPitcher, homePitcher]
+                    "INSERT INTO dodgers_games (game_pk, game_date, game_datetime, away_team, away_score, home_team, home_score, status, away_pitcher, home_pitcher) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [gamePk, date, gameDatetime, awayTeam, awayScore, homeTeam, homeScore, status, awayPitcher, homePitcher]
                 );
             }
         }

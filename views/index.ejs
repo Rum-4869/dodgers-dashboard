@@ -273,6 +273,39 @@
             padding: 25px;
             border-radius: 15px;
             width: 85%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .linescore-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.85em;
+        }
+        .linescore-table th, .linescore-table td {
+            border: 1px solid var(--border-color);
+            padding: 5px;
+            text-align: center;
+        }
+        .linescore-table th {
+            background-color: var(--badge-bg);
+            color: var(--label-color);
+        }
+        .linescore-table td.team-name-cell {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            width: 85%;
             max-width: 400px;
             text-align: center;
             position: relative;
@@ -480,6 +513,21 @@
             <div id="heroCountdown" style="font-size: 2em; font-weight: bold; color: var(--text-color); font-variant-numeric: tabular-nums;">--:--:--</div>
         </div>
 
+        <!-- 📰 NEWS SECTION -->
+        <% if (news && news.length > 0) { %>
+        <div class="news-section" style="margin-bottom: 25px;">
+            <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 1.2em; color: var(--primary-color); border: none; padding: 0;">📰 最新ニュース</h2>
+            <div class="news-scroll" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory;">
+                <% news.forEach(item => { %>
+                <a href="<%= item.link %>" target="_blank" class="news-card" style="min-width: 220px; flex: 0 0 auto; background: var(--card-bg); border-radius: 10px; padding: 12px; text-decoration: none; color: var(--text-color); box-shadow: 0 2px 6px rgba(0,0,0,0.08); scroll-snap-align: start; border-top: 3px solid var(--primary-color); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="font-weight: bold; font-size: 0.9em; line-height: 1.4; margin-bottom: 8px;"><%= item.title %></div>
+                    <div style="font-size: 0.7em; color: var(--label-color); text-align: right;"><%= new Date(item.pubDate).toLocaleDateString('ja-JP') %></div>
+                </a>
+                <% }) %>
+            </div>
+        </div>
+        <% } %>
+
         <% if (standings) { %>
             <div class="standings-card">
                 <div class="standings-item">
@@ -509,6 +557,14 @@
             </div>
             <% } %>
 
+        <!-- 🏆 TEAM LEADERS -->
+        <div id="teamLeadersSection" style="margin-bottom: 30px; display: none;">
+            <h2 style="margin: 0 0 15px 0; color: var(--primary-color);">🏆 チームトップ成績</h2>
+            <div id="teamLeadersGrid" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory;">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px;">
                         <h2 style="margin: 0; color: var(--primary-color);">⚾️ Roster</h2>
                     </div>
@@ -535,13 +591,30 @@
 
     <div id="playerModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <span class="close-btn" onclick="closeModal('playerModal')">&times;</span>
             <h2 id="modalPlayerName" style="margin-top: 5px; color: var(--primary-color);">選手名</h2>
             <div id="modalPlayerStats" class="modal-stats">
+            </div>
+            <!-- Chart.js Canvas -->
+            <div style="margin-top: 20px; position: relative; height: 200px; width: 100%;">
+                <canvas id="playerChart"></canvas>
             </div>
         </div>
     </div>
 
+    <!-- 📊 SCORE MODAL -->
+    <div id="scoreModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('scoreModal')">&times;</span>
+            <h2 id="modalScoreTitle" style="margin-top: 5px; color: var(--primary-color);">詳細スコア</h2>
+            <div id="modalScoreContent">
+                <!-- Filled by JS -->
+                読み込み中...
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
 
         function toggleDarkMode() {
@@ -738,11 +811,12 @@
                                     vs ${oppTeam.replace(' ', '<br>')}<br>
                                     <strong style="font-size:1.1em;">${isWin ? '勝' : '負'} ${dodgerScore} - ${oppScore}</strong>
                                     <hr style="border:0; border-top:1px solid var(--border-color); margin:5px 0;">
-                                    <div style="font-size:0.85em; text-align:left; color:var(--label-color);">
+                                    <div style="font-size:0.85em; text-align:left; color:var(--label-color); margin-bottom: 8px;">
                                         先発:<br>
                                         Away: ${game.away_pitcher || '未定'}<br>
                                         Home: ${game.home_pitcher || '未定'}
                                     </div>
+                                    ${game.game_pk ? `<button onclick="showBoxScore(${game.game_pk})" style="background:var(--primary-color); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.9em; cursor:pointer;">詳細スコア</button>` : ''}
                                 </div>
                             </div>
                         `;
@@ -807,24 +881,27 @@
         });
 
         async function showPlayerStats(cardElement, playerId, position) {
-            // 1. まずモーダルを開いて、名前と「読み込み中」を表示する
             const modal = document.getElementById('playerModal');
             const playerName = cardElement.querySelector('.player-name').innerText;
 
             document.getElementById('modalPlayerName').innerText = playerName;
             const statsEl = document.getElementById('modalPlayerStats');
             statsEl.innerHTML = '<p style="color: var(--label-color); padding: 20px;">⚾️ 成績データを取得中...</p>';
+            
+            if (window.playerChartInstance) {
+                window.playerChartInstance.destroy();
+                window.playerChartInstance = null;
+            }
+            document.getElementById('playerChart').style.display = 'none';
 
             modal.style.display = 'flex';
 
             try {
-                // 2. タップされた瞬間、MLB公式APIに直接成績を聞きに行く！（超高速）
-                const url = `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting,pitching],type=[season])`;
+                const url = `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting,pitching],type=[season,gameLog])`;
                 const res = await fetch(url);
                 const data = await res.json();
                 const playerInfo = data.people[0];
 
-                // まだ試合に出ていない選手などの場合
                 if (!playerInfo.stats || playerInfo.stats.length === 0) {
                     statsEl.innerHTML = '<p style="color: #e74c3c;">今シーズンの成績データがまだ無いみたい！</p>';
                     return;
@@ -832,18 +909,25 @@
 
                 let hittingStats = null;
                 let pitchingStats = null;
+                let gameLog = [];
+                let isPitcher = position === 'P' || position === 'Pitcher';
                 
                 playerInfo.stats.forEach(statGroup => {
-                    if (statGroup.group.displayName === 'hitting' && statGroup.splits.length > 0) {
-                        hittingStats = statGroup.splits[0].stat;
-                    }
-                    if (statGroup.group.displayName === 'pitching' && statGroup.splits.length > 0) {
-                        pitchingStats = statGroup.splits[0].stat;
+                    if (statGroup.type.displayName === 'season') {
+                        if (statGroup.group.displayName === 'hitting' && statGroup.splits.length > 0) {
+                            hittingStats = statGroup.splits[0].stat;
+                        }
+                        if (statGroup.group.displayName === 'pitching' && statGroup.splits.length > 0) {
+                            pitchingStats = statGroup.splits[0].stat;
+                            isPitcher = true;
+                        }
+                    } else if (statGroup.type.displayName === 'gameLog') {
+                        gameLog = statGroup.splits.reverse();
                     }
                 });
 
                 let html = '';
-                if (hittingStats) {
+                if (hittingStats && !isPitcher) {
                     html += `
                     <div style="text-align: left; font-size: 0.85em; color: var(--label-color); margin-bottom: 5px; font-weight: bold; border-left: 3px solid var(--primary-color); padding-left: 5px;">⚾️ 打者成績</div>
                     <div class="modal-stat-row">
@@ -852,7 +936,7 @@
                         <div class="modal-stat-box"><div class="modal-stat-label">打点(RBI)</div><div class="modal-stat-value">${hittingStats.rbi || 0}</div></div>
                     </div>`;
                 }
-                if (pitchingStats) {
+                if (pitchingStats && isPitcher) {
                     html += `
                     <div style="text-align: left; font-size: 0.85em; color: var(--label-color); margin-bottom: 5px; font-weight: bold; border-left: 3px solid var(--primary-color); padding-left: 5px; ${hittingStats ? 'margin-top:15px;' : ''}">⚾️ 投手成績</div>
                     <div class="modal-stat-row">
@@ -866,23 +950,158 @@
                     html = '<p style="color: #e74c3c;">今シーズンの成績データがまだ無いみたい！</p>';
                 }
                 statsEl.innerHTML = html;
+
+                if (gameLog.length > 0) {
+                    const recentGames = gameLog.slice(-10);
+                    const labels = recentGames.map(g => g.date.substring(5));
+                    let chartData = [];
+                    let chartLabel = '';
+
+                    if (isPitcher) {
+                        chartLabel = '奪三振 (SO)';
+                        chartData = recentGames.map(g => g.stat.strikeOuts || 0);
+                    } else {
+                        chartLabel = '打率 (AVG)';
+                        chartData = recentGames.map(g => parseFloat(g.stat.avg || 0));
+                    }
+
+                    document.getElementById('playerChart').style.display = 'block';
+                    const ctx = document.getElementById('playerChart').getContext('2d');
+                    window.playerChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: chartLabel,
+                                data: chartData,
+                                borderColor: '#005A9C',
+                                backgroundColor: 'rgba(0, 90, 156, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3,
+                                pointBackgroundColor: '#005A9C'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: `直近10試合の${chartLabel}`, color: '#888' }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: isPitcher,
+                                    ticks: { color: '#888' }
+                                },
+                                x: {
+                                    ticks: { color: '#888', maxRotation: 45, minRotation: 45 }
+                                }
+                            }
+                        }
+                    });
+                }
             } catch (error) {
+                console.error(error);
                 statsEl.innerHTML = '<p>データの取得に失敗しちゃった！</p>';
             }
         }
 
-        // ×ボタンを押した時にモーダルを閉じる
-        function closeModal() {
-            document.getElementById('playerModal').style.display = 'none';
-        }
-
-        // モーダルの外側（黒い部分）をタップしても閉じるようにする便利機能
-        window.onclick = function (event) {
-            const modal = document.getElementById('playerModal');
-            if (event.target == modal) {
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId || 'playerModal');
+            if (modal) {
                 modal.style.display = "none";
             }
         }
+
+        window.onclick = function (event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(m => {
+                if (event.target == m) {
+                    m.style.display = "none";
+                }
+            });
+        }
+
+        async function showBoxScore(gamePk) {
+            const modal = document.getElementById('scoreModal');
+            const content = document.getElementById('modalScoreContent');
+            content.innerHTML = '<p style="color: var(--label-color); padding:20px;">スコアを取得中...</p>';
+            modal.style.display = "flex";
+            
+            try {
+                const res = await fetch(`https://statsapi.mlb.com/api/v1/game/${gamePk}/linescore`);
+                const data = await res.json();
+                
+                let html = '<table class="linescore-table" style="width:100%; text-align:center; border-collapse:collapse; font-size:0.9em;">';
+                html += '<tr style="border-bottom:1px solid #ddd;"><th>Team</th>';
+                for (let i = 1; i <= Math.max(9, data.innings.length); i++) {
+                    html += `<th>${i}</th>`;
+                }
+                html += '<th>R</th><th>H</th><th>E</th></tr>';
+                
+                html += `<tr><td style="text-align:left; font-weight:bold;">Away</td>`;
+                for (let i = 1; i <= Math.max(9, data.innings.length); i++) {
+                    const inn = data.innings[i-1];
+                    html += `<td>${inn && inn.away.runs !== undefined ? inn.away.runs : '-'}</td>`;
+                }
+                html += `<td><strong>${data.teams.away.runs !== undefined ? data.teams.away.runs : '-'}</strong></td>`;
+                html += `<td>${data.teams.away.hits !== undefined ? data.teams.away.hits : '-'}</td>`;
+                html += `<td>${data.teams.away.errors !== undefined ? data.teams.away.errors : '-'}</td></tr>`;
+                
+                html += `<tr><td style="text-align:left; font-weight:bold;">Home</td>`;
+                for (let i = 1; i <= Math.max(9, data.innings.length); i++) {
+                    const inn = data.innings[i-1];
+                    html += `<td>${inn && inn.home.runs !== undefined ? inn.home.runs : '-'}</td>`;
+                }
+                html += `<td><strong>${data.teams.home.runs !== undefined ? data.teams.home.runs : '-'}</strong></td>`;
+                html += `<td>${data.teams.home.hits !== undefined ? data.teams.home.hits : '-'}</td>`;
+                html += `<td>${data.teams.home.errors !== undefined ? data.teams.home.errors : '-'}</td></tr>`;
+                
+                html += '</table>';
+                content.innerHTML = html;
+            } catch (err) {
+                content.innerHTML = '<p style="color: red; padding:20px;">取得に失敗しました。</p>';
+            }
+        }
+
+        async function fetchTeamLeaders() {
+            try {
+                const res = await fetch('https://statsapi.mlb.com/api/v1/stats/leaders?leaderCategories=homeRuns,battingAverage,earnedRunAverage&statGroup=hitting,pitching&teamId=119&season=' + new Date().getFullYear());
+                const data = await res.json();
+                
+                const grid = document.getElementById('teamLeadersGrid');
+                let html = '';
+                
+                const catLabels = { 'homeRuns': '本塁打 (HR)', 'battingAverage': '打率 (AVG)', 'earnedRunAverage': '防御率 (ERA)' };
+                
+                if (data.leagueLeaders) {
+                    data.leagueLeaders.forEach(category => {
+                        const catName = category.leaderCategory;
+                        if (!catLabels[catName]) return;
+                        const topPlayer = category.leaders[0];
+                        if (!topPlayer) return;
+                        
+                        html += `
+                        <div class="news-card" style="min-width: 140px; flex: 0 0 auto; background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 3px solid #FFD700; scroll-snap-align: start;">
+                            <div style="font-size: 0.8em; color: var(--label-color); font-weight: bold; margin-bottom: 8px;">${catLabels[catName]}</div>
+                            <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${topPlayer.person.id}/headshot/67/current" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); margin-bottom: 8px;" loading="lazy">
+                            <div style="font-weight: bold; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${topPlayer.person.lastName}</div>
+                            <div style="font-size: 1.4em; font-weight: bold; color: var(--primary-color); margin-top: 5px;">${topPlayer.value}</div>
+                        </div>
+                        `;
+                    });
+                    
+                    if (html) {
+                        grid.innerHTML = html;
+                        document.getElementById('teamLeadersSection').style.display = 'block';
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load leaders:', err);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', fetchTeamLeaders);
     </script>
 </body>
 
