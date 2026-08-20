@@ -517,14 +517,17 @@
         <% if (news && news.length > 0) { %>
         <div class="news-section" style="margin-bottom: 25px;">
             <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 1.2em; color: var(--primary-color); border: none; padding: 0;">📰 最新ニュース</h2>
-            <div class="news-scroll" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory;">
-                <% news.forEach(item => { %>
-                <a href="<%= item.link %>" target="_blank" class="news-card" style="min-width: 220px; flex: 0 0 auto; background: var(--card-bg); border-radius: 10px; padding: 12px; text-decoration: none; color: var(--text-color); box-shadow: 0 2px 6px rgba(0,0,0,0.08); scroll-snap-align: start; border-top: 3px solid var(--primary-color); display: flex; flex-direction: column; justify-content: space-between;">
+            <div id="newsList" style="display: flex; flex-direction: column; gap: 10px;">
+                <% news.forEach((item, index) => { %>
+                <a href="<%= item.link %>" target="_blank" class="news-card" style="display: <%= index < 2 ? 'flex' : 'none' %>; flex-direction: column; justify-content: space-between; background: var(--card-bg); border-radius: 10px; padding: 12px; text-decoration: none; color: var(--text-color); box-shadow: 0 2px 6px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color);">
                     <div style="font-weight: bold; font-size: 0.9em; line-height: 1.4; margin-bottom: 8px;"><%= item.title %></div>
                     <div style="font-size: 0.7em; color: var(--label-color); text-align: right;"><%= new Date(item.pubDate).toLocaleDateString('ja-JP') %></div>
                 </a>
                 <% }) %>
             </div>
+            <% if (news.length > 2) { %>
+            <button id="showMoreNewsBtn" onclick="showMoreNews()" style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--primary-color); font-weight: bold; cursor: pointer; transition: background 0.2s;">もっと見る 🔽</button>
+            <% } %>
         </div>
         <% } %>
 
@@ -630,6 +633,14 @@
             document.getElementById('darkModeBtn').innerText = '🌙';
         }
         
+        // ニュースをさらに表示
+        function showMoreNews() {
+            const cards = document.querySelectorAll('#newsList .news-card');
+            cards.forEach(card => card.style.display = 'flex');
+            const btn = document.getElementById('showMoreNewsBtn');
+            if (btn) btn.style.display = 'none';
+        }
+        
 
         // サーバーから渡された全試合データ
         const games = <%- JSON.stringify(games) %>;
@@ -651,7 +662,7 @@
 
             // 2. If no Live game, find next upcoming game
             if (!targetGame) {
-                for (let i = games.length - 1; i >= 0; i--) {
+                for (let i = 0; i < games.length; i++) {
                     const g = games[i];
                     if (!g.game_datetime) continue;
                     const gameTime = new Date(g.game_datetime);
@@ -919,7 +930,6 @@
                         }
                         if (statGroup.group.displayName === 'pitching' && statGroup.splits.length > 0) {
                             pitchingStats = statGroup.splits[0].stat;
-                            isPitcher = true;
                         }
                     } else if (statGroup.type.displayName === 'gameLog') {
                         gameLog = statGroup.splits.reverse();
@@ -927,7 +937,7 @@
                 });
 
                 let html = '';
-                if (hittingStats && !isPitcher) {
+                if (hittingStats) {
                     html += `
                     <div style="text-align: left; font-size: 0.85em; color: var(--label-color); margin-bottom: 5px; font-weight: bold; border-left: 3px solid var(--primary-color); padding-left: 5px;">⚾️ 打者成績</div>
                     <div class="modal-stat-row">
@@ -936,7 +946,7 @@
                         <div class="modal-stat-box"><div class="modal-stat-label">打点(RBI)</div><div class="modal-stat-value">${hittingStats.rbi || 0}</div></div>
                     </div>`;
                 }
-                if (pitchingStats && isPitcher) {
+                if (pitchingStats) {
                     html += `
                     <div style="text-align: left; font-size: 0.85em; color: var(--label-color); margin-bottom: 5px; font-weight: bold; border-left: 3px solid var(--primary-color); padding-left: 5px; ${hittingStats ? 'margin-top:15px;' : ''}">⚾️ 投手成績</div>
                     <div class="modal-stat-row">
@@ -1078,6 +1088,13 @@
                 if (data.leagueLeaders) {
                     data.leagueLeaders.forEach(category => {
                         const catName = category.leaderCategory;
+                        const groupName = category.statGroup;
+                        
+                        // 余分なカテゴリ（投手の打率など）を除外
+                        if (catName === 'homeRuns' && groupName !== 'hitting') return;
+                        if (catName === 'battingAverage' && groupName !== 'hitting') return;
+                        if (catName === 'earnedRunAverage' && groupName !== 'pitching') return;
+                        
                         if (!catLabels[catName]) return;
                         const topPlayer = category.leaders[0];
                         if (!topPlayer) return;
