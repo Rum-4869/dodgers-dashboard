@@ -564,7 +564,7 @@
         <!-- 🏆 TEAM LEADERS -->
         <div id="teamLeadersSection" style="margin-bottom: 30px; display: none;">
             <h2 style="margin: 0 0 15px 0; color: var(--primary-color);">🏆 チームトップ成績</h2>
-            <div id="teamLeadersGrid" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory;">
+            <div id="teamLeadersGrid" style="display: flex; gap: 8px; padding-bottom: 10px;">
                 <!-- Filled by JS -->
             </div>
         </div>
@@ -1121,11 +1121,11 @@
                         if (!topPlayer) return;
                         
                         html += `
-                        <div class="news-card" style="min-width: 140px; flex: 0 0 auto; background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 3px solid #FFD700; scroll-snap-align: start;">
-                            <div style="font-size: 0.8em; color: var(--label-color); font-weight: bold; margin-bottom: 8px;">${catLabels[catName]}</div>
-                            <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${topPlayer.person.id}/headshot/67/current" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); margin-bottom: 8px;" loading="lazy">
-                            <div style="font-weight: bold; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${topPlayer.person.lastName}</div>
-                            <div style="font-size: 1.4em; font-weight: bold; color: var(--primary-color); margin-top: 5px;">${topPlayer.value}</div>
+                        <div class="news-card" style="min-width: 0; flex: 1; background: var(--card-bg); border-radius: 12px; padding: 10px 5px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 3px solid #FFD700;">
+                            <div style="font-size: 0.75em; color: var(--label-color); font-weight: bold; margin-bottom: 5px;">${catLabels[catName]}</div>
+                            <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${topPlayer.person.id}/headshot/67/current" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); margin-bottom: 5px;" loading="lazy">
+                            <div style="font-weight: bold; font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${topPlayer.person.lastName}</div>
+                            <div style="font-size: 1.2em; font-weight: bold; color: var(--primary-color); margin-top: 3px;">${topPlayer.value}</div>
                         </div>
                         `;
                     });
