@@ -1,0 +1,13 @@
+# Node.js
+node_modules/
+
+# Environment Variables (DO NOT PUSH SECRETS)
+.env
+.env.*
+
+# Mac OS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]

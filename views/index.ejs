@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodgers Dashboard</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background-color: #005A9C;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5em;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .standings-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .standings-item {
+            flex: 1;
+        }
+
+        .standings-label {
+            font-size: 0.75em;
+            color: #888;
+            font-weight: bold;
+        }
+
+        .standings-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #005A9C;
+            margin-top: 2px;
+        }
+
+
+
+        .roster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        /* 🌟 選手カードが「押せる」ように改造！ */
+        .player-card {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-top: 3px solid #005A9C;
+            cursor: pointer;
+            /* マウスを指マークにする */
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .player-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 90, 156, 0.3);
+        }
+
+        .player-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #eef5fc;
+            margin: 0 auto 8px;
+            display: block;
+            border: 2px solid #005A9C;
+        }
+
+        .player-number {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #005A9C;
+        }
+
+        .player-name {
+            font-size: 0.85em;
+            font-weight: bold;
+            margin: 4px 0;
+        }
+
+        .player-pos {
+            font-size: 0.75em;
+            color: #777;
+            background: #eef5fc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 6px solid #005A9C;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .date {
+            color: #888;
+            font-size: 0.8em;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .matchup {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .team-box {
+            width: 40%;
+            text-align: center;
+        }
+
+        .team-name {
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .team-score {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .vs {
+            width: 20%;
+            text-align: center;
+            color: #ccc;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        h2 {
+            font-size: 1.1em;
+            color: #444;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            border-left: 4px solid #005A9C;
+            padding-left: 8px;
+        }
+
+        /* 🌟 ここからポップアップ（モーダル）のデザイン！ */
+        .modal {
+            display: none;
+            /* 最初は隠しておく */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 85%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .modal-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .modal-stat-row {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .modal-stat-box {
+            background: #f0f2f5;
+            padding: 10px;
+            border-radius: 8px;
+            width: 30%;
+        }
+
+        .modal-stat-label {
+            font-size: 0.7em;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .modal-stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #005A9C;
+            margin-top: 5px;
+        }
+        /* 🌟 カレンダーのデザイン */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border-left: 6px solid #005A9C;
+        }
+        .calendar-header {
+            text-align: center;
+            grid-column: span 7;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        .day-name {
+            text-align: center;
+            font-weight: bold;
+            color: #888;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+        .day-cell {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            position: relative;
+            font-size: 0.9em;
+            cursor: default;
+        }
+        .day-cell.game-win {
+            background: #eef5fc;
+            border: 1px solid #005A9C;
+            color: #005A9C;
+            cursor: pointer;
+        }
+        .day-cell.game-loss {
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            color: #666;
+            cursor: pointer;
+        }
+        .day-cell.game-scheduled {
+            background: #fffdf5;
+            border: 1px dashed #e6c555;
+            color: #886514;
+            cursor: pointer;
+        }
+        .day-cell.empty {
+            background: transparent;
+            border: none;
+        }
+        .day-icon {
+            font-size: 1.1em;
+            margin-top: 2px;
+        }
+        .day-cell .tooltip {
+            visibility: hidden;
+            width: max-content;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 10;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 0.85em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .day-cell .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        .day-cell:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.2em; }
+            .header { padding: 15px 10px; margin-bottom: 10px; }
+            .standings-card { padding: 10px; margin-bottom: 15px; }
+            .standings-value { font-size: 1.2em; }
+            .standings-label { font-size: 0.65em; }
+            .roster-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 20px; }
+            .player-img { width: 60px; height: 60px; }
+            .player-name { font-size: 0.75em; }
+            .player-pos { font-size: 0.65em; }
+            .calendar { gap: 2px; }
+            .day-cell { font-size: 0.75em; padding: 2px 0; }
+            .day-icon { font-size: 0.9em; }
+            .day-name { font-size: 0.7em; }
+            .day-cell .tooltip { 
+                font-size: 0.75em; 
+                padding: 4px 6px; 
+                white-space: normal; 
+                max-width: 120px; 
+                bottom: 125%; 
+            }
+            .modal-content { width: 90%; padding: 15px; }
+            .modal-stat-box { padding: 6px; }
+            .modal-stat-label { font-size: 0.6em; }
+            .modal-stat-value { font-size: 1em; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>⚾️ DODGERS DASHBOARD</h1>
+    </div>
+
+    <div class="container">
+        <% if (standings) { %>
+            <div class="standings-card">
+                <div class="standings-item">
+                    <div class="standings-label">勝利数</div>
+                    <div class="standings-value">
+                        <%= standings.wins %>勝
+                    </div>
+                </div>
+                <div class="standings-item">
+                    <div class="standings-label">敗戦数</div>
+                    <div class="standings-value" style="color: #666;">
+                        <%= standings.losses %>敗
+                    </div>
+                </div>
+                <div class="standings-item">
+                    <div class="standings-label">勝率</div>
+                    <div class="standings-value">
+                        <%= standings.pct %>
+                    </div>
+                </div>
+                <div class="standings-item">
+                    <div class="standings-label">地区順位</div>
+                    <div class="standings-value" style="color: #FFD700;">
+                        <%= standings.division_rank %>位
+                    </div>
+                </div>
+            </div>
+            <% } %>
+
+
+
+                        <h2>🧢 所属選手メンバー (Roster)</h2>
+                        <p style="font-size: 0.8em; color: #666;">👇 カードをタップすると成績が見れるよ！</p>
+                        <div class="roster-grid">
+                            <% roster.forEach(player=> { %>
+                                <div class="player-card"
+                                    onclick="showPlayerStats(this, <%= player.player_id %>, '<%= player.position %>')">
+                                    <img class="player-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/<%= player.player_id %>/headshot/67/current" alt="Player Image" loading="lazy">
+                                    <div class="player-number">#<%= player.jersey_number %>
+                                    </div>
+                                    <div class="player-name">
+                                        <%= player.name %>
+                                    </div>
+                                    <div class="player-pos">
+                                        <%= player.position %>
+                                    </div>
+                                </div>
+                                <% }) %>
+                        </div>
+
+                        <h2>🗓️ 今月の試合結果</h2>
+                        <div id="calendar-container"></div>
+    </div>
+
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalPlayerName" style="margin-top: 5px; color: #005A9C;">選手名</h2>
+            <div id="modalPlayerStats" class="modal-stats">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // サーバーから渡された全試合データ
+        const gamesData = <%- JSON.stringify(games) %>;
+
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth(); // 0-indexed
+
+        function changeMonth(offset) {
+            currentMonth += offset;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            if (!container) return;
+            
+            const year = currentYear;
+            const month = currentMonth;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            let html = '<div class="calendar">';
+            html += `<div class="calendar-header">
+                        <button onclick="changeMonth(-1)" style="float:left; cursor:pointer; background:none; border:none; font-size:1em; color:#005A9C;">◀ 先月</button>
+                        ${year}年 ${month + 1}月
+                        <button onclick="changeMonth(1)" style="float:right; cursor:pointer; background:none; border:none; font-size:1em; color:#005A9C;">来月 ▶</button>
+                     </div>`;
+            
+            const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+            dayNames.forEach(d => {
+                html += `<div class="day-name">${d}</div>`;
+            });
+            
+            const startDayOfWeek = firstDay.getDay();
+            for (let i = 0; i < startDayOfWeek; i++) {
+                html += '<div class="day-cell empty"></div>';
+            }
+            
+            // 試合データを日付(YYYY-MM-DD)をキーにした辞書にする
+            const gamesByDate = {};
+            gamesData.forEach(game => {
+                let dStr;
+                if (game.game_datetime) {
+                    const d = new Date(game.game_datetime); // 自動的にローカル(日本)時間に変換される
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    dStr = `${y}-${m}-${day}`;
+                } else if(game.game_date) {
+                    dStr = game.game_date.substring(0, 10);
+                }
+                
+                if (dStr) {
+                    if (!gamesByDate[dStr]) gamesByDate[dStr] = [];
+                    gamesByDate[dStr].push(game);
+                }
+            });
+            
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dailyGames = gamesByDate[dateStr] || [];
+                
+                if (dailyGames.length > 0) {
+                    const game = dailyGames[0]; // その日の最初の試合を表示
+                    const isHome = game.home_team.includes('Dodgers');
+                    const dodgerScore = isHome ? game.home_score : game.away_score;
+                    const oppScore = isHome ? game.away_score : game.home_score;
+                    const oppTeam = isHome ? game.away_team : game.home_team;
+                    
+                    if (game.status === 'Final') {
+                        const isWin = dodgerScore > oppScore;
+                        const resultClass = isWin ? 'game-win' : 'game-loss';
+                        
+                        html += `
+                            <div class="day-cell ${resultClass}">
+                                <div>${day}</div>
+                                <div class="day-icon">⚾️</div>
+                                <div class="tooltip">
+                                    vs ${oppTeam.replace(' ', '<br>')}<br>
+                                    <strong style="font-size:1.1em;">${isWin ? '勝' : '負'} ${dodgerScore} - ${oppScore}</strong>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        let timeStr = '予定';
+                        if (game.game_datetime) {
+                            const d = new Date(game.game_datetime);
+                            const h = String(d.getHours()).padStart(2, '0');
+                            const m = String(d.getMinutes()).padStart(2, '0');
+                            timeStr = `${h}:${m}`;
+                        }
+                        
+                        html += `
+                            <div class="day-cell game-scheduled">
+                                <div>${day}</div>
+                                <div class="day-icon" style="opacity:0.6;">🗓️</div>
+                                <div class="tooltip">
+                                    vs ${oppTeam.replace(' ', '<br>')}<br>
+                                    <strong style="font-size:1.1em;">${timeStr} 開始</strong>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    html += `
+                        <div class="day-cell">
+                            <div>${day}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // ページ読み込み時にカレンダーを描画
+        document.addEventListener('DOMContentLoaded', renderCalendar);
+
+        async function showPlayerStats(cardElement, playerId, position) {
+            // 1. まずモーダルを開いて、名前と「読み込み中」を表示する
+            const modal = document.getElementById('playerModal');
+            const playerName = cardElement.querySelector('.player-name').innerText;
+
+            document.getElementById('modalPlayerName').innerText = playerName;
+            const statsEl = document.getElementById('modalPlayerStats');
+            statsEl.innerHTML = '<p style="color: #666; padding: 20px;">⚾️ 成績データを取得中...</p>';
+
+            modal.style.display = 'flex';
+
+            try {
+                // 2. タップされた瞬間、MLB公式APIに直接成績を聞きに行く！（超高速）
+                const url = `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting,pitching],type=[season])`;
+                const res = await fetch(url);
+                const data = await res.json();
+                const playerInfo = data.people[0];
+
+                // まだ試合に出ていない選手などの場合
+                if (!playerInfo.stats || playerInfo.stats.length === 0) {
+                    statsEl.innerHTML = '<p style="color: #e74c3c;">今シーズンの成績データがまだ無いみたい！</p>';
+                    return;
+                }
+
+                let hittingStats = null;
+                let pitchingStats = null;
+                
+                playerInfo.stats.forEach(statGroup => {
+                    if (statGroup.group.displayName === 'hitting' && statGroup.splits.length > 0) {
+                        hittingStats = statGroup.splits[0].stat;
+                    }
+                    if (statGroup.group.displayName === 'pitching' && statGroup.splits.length > 0) {
+                        pitchingStats = statGroup.splits[0].stat;
+                    }
+                });
+
+                let html = '';
+                if (hittingStats) {
+                    html += `
+                    <div style="text-align: left; font-size: 0.85em; color: #555; margin-bottom: 5px; font-weight: bold; border-left: 3px solid #005A9C; padding-left: 5px;">⚾️ 打者成績</div>
+                    <div class="modal-stat-row">
+                        <div class="modal-stat-box"><div class="modal-stat-label">打率(AVG)</div><div class="modal-stat-value">${hittingStats.avg || '-'}</div></div>
+                        <div class="modal-stat-box"><div class="modal-stat-label">本塁打(HR)</div><div class="modal-stat-value">${hittingStats.homeRuns || 0}</div></div>
+                        <div class="modal-stat-box"><div class="modal-stat-label">打点(RBI)</div><div class="modal-stat-value">${hittingStats.rbi || 0}</div></div>
+                    </div>`;
+                }
+                if (pitchingStats) {
+                    html += `
+                    <div style="text-align: left; font-size: 0.85em; color: #555; margin-bottom: 5px; font-weight: bold; border-left: 3px solid #005A9C; padding-left: 5px; ${hittingStats ? 'margin-top:15px;' : ''}">⚾️ 投手成績</div>
+                    <div class="modal-stat-row">
+                        <div class="modal-stat-box"><div class="modal-stat-label">防御率(ERA)</div><div class="modal-stat-value">${pitchingStats.era || '-'}</div></div>
+                        <div class="modal-stat-box"><div class="modal-stat-label">勝利(W)</div><div class="modal-stat-value">${pitchingStats.wins || 0}</div></div>
+                        <div class="modal-stat-box"><div class="modal-stat-label">奪三振(SO)</div><div class="modal-stat-value">${pitchingStats.strikeOuts || 0}</div></div>
+                    </div>`;
+                }
+                
+                if (!html) {
+                    html = '<p style="color: #e74c3c;">今シーズンの成績データがまだ無いみたい！</p>';
+                }
+                statsEl.innerHTML = html;
+            } catch (error) {
+                statsEl.innerHTML = '<p>データの取得に失敗しちゃった！</p>';
+            }
+        }
+
+        // ×ボタンを押した時にモーダルを閉じる
+        function closeModal() {
+            document.getElementById('playerModal').style.display = 'none';
+        }
+
+        // モーダルの外側（黒い部分）をタップしても閉じるようにする便利機能
+        window.onclick = function (event) {
+            const modal = document.getElementById('playerModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+
+</html>
