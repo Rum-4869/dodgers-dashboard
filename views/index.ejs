@@ -527,6 +527,7 @@
             </div>
             <% if (news.length > 2) { %>
             <button id="showMoreNewsBtn" onclick="showMoreNews()" style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--primary-color); font-weight: bold; cursor: pointer; transition: background 0.2s;">もっと見る 🔽</button>
+            <button id="hideMoreNewsBtn" onclick="hideMoreNews()" style="display: none; width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--label-color); font-weight: bold; cursor: pointer; transition: background 0.2s;">閉じる 🔼</button>
             <% } %>
         </div>
         <% } %>
@@ -637,8 +638,24 @@
         function showMoreNews() {
             const cards = document.querySelectorAll('#newsList .news-card');
             cards.forEach(card => card.style.display = 'flex');
-            const btn = document.getElementById('showMoreNewsBtn');
-            if (btn) btn.style.display = 'none';
+            
+            const showBtn = document.getElementById('showMoreNewsBtn');
+            const hideBtn = document.getElementById('hideMoreNewsBtn');
+            if (showBtn) showBtn.style.display = 'none';
+            if (hideBtn) hideBtn.style.display = 'block';
+        }
+        
+        // ニュースを折りたたむ
+        function hideMoreNews() {
+            const cards = document.querySelectorAll('#newsList .news-card');
+            cards.forEach((card, index) => {
+                if (index >= 2) card.style.display = 'none';
+            });
+            
+            const showBtn = document.getElementById('showMoreNewsBtn');
+            const hideBtn = document.getElementById('hideMoreNewsBtn');
+            if (showBtn) showBtn.style.display = 'block';
+            if (hideBtn) hideBtn.style.display = 'none';
         }
         
 
@@ -813,9 +830,10 @@
                     } else if (game.status === 'Final') {
                         const isWin = dodgerScore > oppScore;
                         const resultClass = isWin ? 'game-win' : 'game-loss';
+                        const onClickAction = game.game_pk ? `showBoxScore(${game.game_pk})` : `toggleDayTooltip(event, this)`;
                         
                         html += `
-                            <div class="day-cell ${resultClass}" onclick="toggleDayTooltip(event, this)">
+                            <div class="day-cell ${resultClass}" onclick="${onClickAction}">
                                 <div>${day}</div>
                                 <div class="day-icon">⚾️</div>
                                 <div class="tooltip">
@@ -827,7 +845,7 @@
                                         Away: ${game.away_pitcher || '未定'}<br>
                                         Home: ${game.home_pitcher || '未定'}
                                     </div>
-                                    ${game.game_pk ? `<button onclick="showBoxScore(${game.game_pk})" style="background:var(--primary-color); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.9em; cursor:pointer;">詳細スコア</button>` : ''}
+                                    ${game.game_pk ? `<div style="font-size:0.8em; color:var(--primary-color);">タップで詳細表示</div>` : ''}
                                 </div>
                             </div>
                         `;
