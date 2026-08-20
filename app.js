@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 require('dotenv').config();
+const updateDodgersData = require('./dataUpdater');
 
 const app = express();
 const port = 3000;
@@ -49,5 +50,10 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`🚀 ダッシュボードが起動したよ！ http://localhost:${port}`);
+    console.log(`⚾️ Dodgers Dashboard Server running at http://localhost:${port}`);
+    
+    // 3時間おきに自動更新 (3時間 = 10,800,000ミリ秒)
+    setInterval(() => {
+        updateDodgersData();
+    }, 3 * 60 * 60 * 1000);
 });
