@@ -71,7 +71,10 @@ app.get('/', async (req, res) => {
 app.listen(port, () => {
     console.log(`⚾️ Dodgers Dashboard Server running at http://localhost:${port}`);
     
-    // 3時間おきに自動更新 (3時間 = 10,800,000ミリ秒)
+    // サーバー起動時にまず最新データを取得（Renderのスリープ復帰対策）
+    updateDodgersData();
+
+    // その後、3時間おきに自動更新 (3時間 = 10,800,000ミリ秒)
     setInterval(() => {
         updateDodgersData();
     }, 3 * 60 * 60 * 1000);
