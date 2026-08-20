@@ -844,7 +844,7 @@
                                         Away: ${game.away_pitcher || '未定'}<br>
                                         Home: ${game.home_pitcher || '未定'}
                                     </div>
-                                    ${game.game_pk ? `<button onclick="showBoxScore(${game.game_pk})" style="background:var(--primary-color); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.9em; cursor:pointer;">詳細表示</button>` : ''}
+                                    ${game.game_pk ? `<button onclick="event.stopPropagation(); showBoxScore(${game.game_pk})" style="background:var(--primary-color); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.9em; cursor:pointer;">詳細表示</button>` : ''}
                                 </div>
                             </div>
                         `;
