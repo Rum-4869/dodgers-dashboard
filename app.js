@@ -27,7 +27,7 @@ async function fetchNews() {
 }
 fetchNews(); // 初回実行
 setInterval(fetchNews, 60 * 60 * 1000); // 1時間ごとに更新
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -68,8 +68,8 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`⚾️ Dodgers Dashboard Server running at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`⚾️ Dodgers Dashboard Server running at http://0.0.0.0:${port}`);
     
     // サーバー起動時にまず最新データを取得（Renderのスリープ復帰対策）
     updateDodgersData();
