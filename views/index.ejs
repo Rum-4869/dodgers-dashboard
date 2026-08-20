@@ -830,10 +830,9 @@
                     } else if (game.status === 'Final') {
                         const isWin = dodgerScore > oppScore;
                         const resultClass = isWin ? 'game-win' : 'game-loss';
-                        const onClickAction = game.game_pk ? `showBoxScore(${game.game_pk})` : `toggleDayTooltip(event, this)`;
                         
                         html += `
-                            <div class="day-cell ${resultClass}" onclick="${onClickAction}">
+                            <div class="day-cell ${resultClass}" onclick="toggleDayTooltip(event, this)">
                                 <div>${day}</div>
                                 <div class="day-icon">⚾️</div>
                                 <div class="tooltip">
@@ -845,7 +844,7 @@
                                         Away: ${game.away_pitcher || '未定'}<br>
                                         Home: ${game.home_pitcher || '未定'}
                                     </div>
-                                    ${game.game_pk ? `<div style="font-size:0.8em; color:var(--primary-color);">タップで詳細表示</div>` : ''}
+                                    ${game.game_pk ? `<button onclick="showBoxScore(${game.game_pk})" style="background:var(--primary-color); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.9em; cursor:pointer;">詳細表示</button>` : ''}
                                 </div>
                             </div>
                         `;
