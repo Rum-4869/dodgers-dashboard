@@ -844,7 +844,7 @@
                                         Away: ${game.away_pitcher || '未定'}<br>
                                         Home: ${game.home_pitcher || '未定'}
                                     </div>
-                                    ${game.game_pk ? `<button onclick="event.stopPropagation(); showBoxScore(${game.game_pk})" style="background:var(--primary-color); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.9em; cursor:pointer;">詳細表示</button>` : ''}
+                                    ${game.game_pk ? `<button onclick="showBoxScore(event, ${game.game_pk})" style="background:var(--primary-color); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.9em; cursor:pointer;">詳細表示</button>` : ''}
                                 </div>
                             </div>
                         `;
@@ -1050,7 +1050,12 @@
             });
         }
 
-        async function showBoxScore(gamePk) {
+        async function showBoxScore(e, gamePk) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
             const modal = document.getElementById('scoreModal');
             const content = document.getElementById('modalScoreContent');
             content.innerHTML = '<p style="color: var(--label-color); padding:20px;">スコアを取得中...</p>';
