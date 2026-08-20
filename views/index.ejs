@@ -341,7 +341,8 @@
             border-style: solid;
             border-color: #333 transparent transparent transparent;
         }
-        .day-cell:hover .tooltip {
+        .day-cell:hover .tooltip,
+        .day-cell.active .tooltip {
             visibility: visible;
             opacity: 1;
         }
@@ -526,7 +527,7 @@
                         const resultClass = isWin ? 'game-win' : 'game-loss';
                         
                         html += `
-                            <div class="day-cell ${resultClass}">
+                            <div class="day-cell ${resultClass}" onclick="toggleDayTooltip(event, this)">
                                 <div>${day}</div>
                                 <div class="day-icon">⚾️</div>
                                 <div class="tooltip">
@@ -545,7 +546,7 @@
                         }
                         
                         html += `
-                            <div class="day-cell game-scheduled">
+                            <div class="day-cell game-scheduled" onclick="toggleDayTooltip(event, this)">
                                 <div>${day}</div>
                                 <div class="day-icon" style="opacity:0.6;">🗓️</div>
                                 <div class="tooltip">
@@ -570,6 +571,24 @@
 
         // ページ読み込み時にカレンダーを描画
         document.addEventListener('DOMContentLoaded', renderCalendar);
+
+        // スマホなどでカレンダーのマスをタップした時にスコアを表示する機能
+        function toggleDayTooltip(e, element) {
+            e.stopPropagation(); // 画面全体へのクリック判定をブロック
+            
+            // 他の開いているツールチップをすべて閉じる
+            document.querySelectorAll('.day-cell.active').forEach(el => {
+                if(el !== element) el.classList.remove('active');
+            });
+            
+            // 自分のツールチップを開閉する
+            element.classList.toggle('active');
+        }
+
+        // カレンダー以外の場所をタップしたらツールチップを閉じる
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.day-cell.active').forEach(el => el.classList.remove('active'));
+        });
 
         async function showPlayerStats(cardElement, playerId, position) {
             // 1. まずモーダルを開いて、名前と「読み込み中」を表示する
